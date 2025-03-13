@@ -1,6 +1,5 @@
 """Alembic environment configuration."""
 
-import asyncio
 import logging
 import os
 import sys
@@ -11,14 +10,11 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncEngine
 
 # Import all models to ensure they are registered with SQLAlchemy
 from src.app.core.config import settings
 from src.app.core.db.base import Base
-from src.app.core.db.session import (
-    db_manager,  # Import the db_manager instead of AsyncSessionLocal
-)
+from src.app.core.db.session import db_manager
 
 # Add the project root to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -101,30 +97,25 @@ try:
         with context.begin_transaction():
             context.run_migrations()
 
-    async def run_migrations_online() -> None:
-        """Run migrations in 'online' mode.
+    def run_migrations_online() -> None:
+        """Run migrations using a synchronous engine.
 
-        In this scenario we need to create an Engine
-        and associate a connection with the context.
+        This function creates a standard SQLAlchemy engine for database connections.
         """
-        connectable = AsyncEngine(
-            engine_from_config(
-                config.get_section(config.config_ini_section),
-                prefix="sqlalchemy.",
-                poolclass=pool.NullPool,
-                future=True,
-            )
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+            future=True,
         )
 
-        async with connectable.connect() as connection:
-            await connection.run_sync(do_run_migrations)
-
-        await connectable.dispose()
+        with connectable.connect() as connection:
+            do_run_migrations(connection)
 
     if context.is_offline_mode():
         run_migrations_offline()
     else:
-        asyncio.run(run_migrations_online())
+        run_migrations_online()
 
 except SQLAlchemyError as e:
     logging.error(f"Database connection error in migrations: {str(e)}")

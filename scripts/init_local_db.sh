@@ -9,7 +9,6 @@ source venv/bin/activate
 # Set environment variables to use local configuration
 export ENVIRONMENT=local
 export ENV_FILE=./env/.env.local
-export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/onboarding_db_local
 
 # Add the project root to PYTHONPATH
 export PYTHONPATH=$PYTHONPATH:$(pwd)

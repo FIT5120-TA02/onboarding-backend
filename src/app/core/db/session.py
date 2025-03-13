@@ -2,13 +2,12 @@
 
 import logging
 import time
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from contextlib import contextmanager
+from typing import Generator
 
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from src.app.core.config import settings
 
@@ -34,7 +33,7 @@ class DatabaseSessionManager:
         self.session_factory = None
         self._initialized = False
 
-    async def initialize(self, retry: bool = True) -> bool:
+    def initialize(self, retry: bool = True) -> bool:
         """Initialize the database engine and session factory.
 
         Args:
@@ -54,7 +53,7 @@ class DatabaseSessionManager:
                 )
 
                 # Create engine
-                self.engine = create_async_engine(
+                self.engine = create_engine(
                     str(settings.DATABASE_URL),
                     echo=settings.DEBUG,
                     future=True,
@@ -67,15 +66,14 @@ class DatabaseSessionManager:
                 # Create session factory
                 self.session_factory = sessionmaker(
                     self.engine,
-                    class_=AsyncSession,
                     expire_on_commit=False,
                     autocommit=False,
                     autoflush=False,
                 )
 
                 # Test the connection
-                async with self.engine.begin() as conn:
-                    await conn.execute(text("SELECT 1"))
+                with self.engine.connect() as conn:
+                    conn.execute(text("SELECT 1"))
 
                 logger.info("Database connection established successfully")
                 self._initialized = True
@@ -98,15 +96,15 @@ class DatabaseSessionManager:
 
         return False
 
-    @asynccontextmanager
-    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+    @contextmanager
+    def session(self) -> Generator[Session, None, None]:
         """Get a database session.
 
         Yields:
-            AsyncSession: Database session.
+            Session: Database session.
         """
         if not self._initialized:
-            success = await self.initialize()
+            success = self.initialize()
             if not success:
                 raise RuntimeError("Database connection is not initialized")
 
@@ -115,12 +113,12 @@ class DatabaseSessionManager:
             yield session
         except SQLAlchemyError as e:
             logger.exception(f"Database session error: {str(e)}")
-            await session.rollback()
+            session.rollback()
             raise
         finally:
-            await session.close()
+            session.close()
 
-    def get_dummy_session(self) -> AsyncGenerator[AsyncSession, None]:
+    def get_dummy_session(self) -> Generator[Session, None, None]:
         """Get a dummy session when database is not available.
 
         Yields:
@@ -128,24 +126,24 @@ class DatabaseSessionManager:
         """
 
         class DummySession:
-            async def execute(self, *args, **kwargs):
+            def execute(self, *args, **kwargs):
                 raise RuntimeError("No database connection available")
 
-            async def commit(self):
+            def commit(self):
                 raise RuntimeError("No database connection available")
 
-            async def rollback(self):
+            def rollback(self):
                 pass
 
-            async def close(self):
+            def close(self):
                 pass
 
-        async def _get_session():
+        def _get_session():
             session = DummySession()
             try:
                 yield session
             finally:
-                await session.close()
+                session.close()
 
         return _get_session()
 
@@ -154,18 +152,18 @@ class DatabaseSessionManager:
 db_manager = DatabaseSessionManager()
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+def get_db() -> Generator[Session, None, None]:
     """Get database session.
 
     This is the dependency to be used in FastAPI endpoints.
 
     Yields:
-        AsyncSession: Database session.
+        Session: Database session.
     """
     try:
-        async with db_manager.session() as session:
+        with db_manager.session() as session:
             yield session
     except RuntimeError as e:
         logger.warning(f"Using dummy database session: {str(e)}")
-        async for session in db_manager.get_dummy_session():
+        for session in db_manager.get_dummy_session():
             yield session

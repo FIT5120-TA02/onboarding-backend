@@ -3,7 +3,7 @@
 from typing import Optional
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from src.app.crud.base import CRUDBase
 from src.app.models.user import User
@@ -13,7 +13,7 @@ from src.app.schemas.user import UserCreate, UserUpdate
 class UserCRUD(CRUDBase[User, UserCreate, UserUpdate]):
     """CRUD operations for User model."""
 
-    async def get_by_email(self, db: AsyncSession, *, email: str) -> Optional[User]:
+    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         """Get a user by email.
 
         Args:
@@ -23,10 +23,10 @@ class UserCRUD(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             User if found, None otherwise.
         """
-        result = await db.execute(select(User).where(User.email == email))
+        result = db.execute(select(User).where(User.email == email))
         return result.scalars().first()
 
-    async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
+    def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """Create a new user.
 
         Args:
@@ -47,8 +47,8 @@ class UserCRUD(CRUDBase[User, UserCreate, UserUpdate]):
             is_superuser=obj_in.is_superuser,
         )
         db.add(db_obj)
-        await db.commit()
-        await db.refresh(db_obj)
+        db.commit()
+        db.refresh(db_obj)
         return db_obj
 
 
