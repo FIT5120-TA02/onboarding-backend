@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get(
-    "/health",
+    "/",
     response_model=HealthResponse,
     status_code=status.HTTP_200_OK,
     summary="Health check",

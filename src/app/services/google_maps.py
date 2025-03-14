@@ -36,14 +36,11 @@ class GoogleMapsService:
             "northeast": {"lat": -10.6681857235, "lng": 153.569469029},
         }
 
-    async def get_address_predictions(
-        self, input_text: str, session_token: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    async def get_address_predictions(self, input_text: str) -> List[Dict[str, Any]]:
         """Get address predictions from Google Places Autocomplete API.
 
         Args:
             input_text: The text to get predictions for.
-            session_token: Optional session token for billing optimization.
 
         Returns:
             List of address predictions.
@@ -60,9 +57,6 @@ class GoogleMapsService:
             "components": "country:au",  # Restrict to Australia
             "types": "address",  # Only return addresses
         }
-
-        if session_token:
-            params["sessiontoken"] = session_token
 
         try:
             async with httpx.AsyncClient() as client:

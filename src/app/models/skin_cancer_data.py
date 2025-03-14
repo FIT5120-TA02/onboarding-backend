@@ -23,9 +23,9 @@ class SkinCancerData(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "skin_cancer_data"
 
+    data_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     cancer_group: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     sex: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     age_group: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
-    age_specific_rate: Mapped[float] = mapped_column(Float, nullable=False)
