@@ -16,29 +16,20 @@ class User(Base, UUIDMixin, TimestampMixin):
 
     Attributes:
         id: User ID (UUID).
-        email: User email for notifications.
         name: User's full name.
         username: Unique username for the user.
-        mobile_number: User's mobile number for sending reminders.
         created_at: When the user was created.
         updated_at: When the user was last updated.
     """
 
     __tablename__ = "users"
 
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, index=True, nullable=False
-    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     username: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, nullable=False
     )
-    mobile_number: Mapped[str] = mapped_column(String(20), nullable=True)
 
     # Relationships
     locations: Mapped[List["Location"]] = relationship(
         "Location", back_populates="user", cascade="all, delete-orphan"
     )
-
-    # Example relationship
-    # items: Mapped[List["Item"]] = relationship("Item", back_populates="owner")

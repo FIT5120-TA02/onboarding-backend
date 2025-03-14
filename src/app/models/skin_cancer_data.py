@@ -1,6 +1,6 @@
 """Skin cancer data model module."""
 
-from sqlalchemy import Float, Integer, String
+from sqlalchemy import Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.app.core.db.base_class import Base, TimestampMixin, UUIDMixin

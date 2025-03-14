@@ -16,7 +16,7 @@ from src.app.schemas.skin_cancer import (
     SkinCancerFilter,
 )
 
-router = APIRouter(tags=["skin_cancer"])
+router = APIRouter(tags=["skin-cancer"])
 logger = logging.getLogger(__name__)
 
 

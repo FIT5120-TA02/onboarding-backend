@@ -1,6 +1,6 @@
 """Weather API schemas."""
 
-from typing import List
+from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
@@ -99,3 +99,43 @@ class WeatherResponse(BaseModel):
     location: LocationInfo = Field(..., description="Location information")
     current: CurrentWeather = Field(..., description="Current weather data")
     timestamp: str = Field(..., description="Response timestamp in ISO format")
+
+
+class UVIndexHeatmapResponse(BaseModel):
+    """Response schema for UV index heatmap.
+
+    Attributes:
+        url: URL of the UV index heatmap image.
+        period: Time period of the UV index heatmap.
+        source: Source of the UV index heatmap data.
+    """
+
+    url: str = Field(..., description="URL of the UV index heatmap image")
+    period: str = Field(..., description="Time period of the UV index heatmap")
+    source: str = Field(
+        "Australian Bureau of Meteorology",
+        description="Source of the UV index heatmap data",
+    )
+
+
+class TemperatureMapResponse(BaseModel):
+    """Response schema for temperature map.
+
+    Attributes:
+        url: URL of the temperature map image.
+        temp_type: Type of temperature (mean, maximum, or minimum).
+        region: Region of Australia.
+        period: Time period of the temperature map.
+        source: Source of the temperature map data.
+    """
+
+    url: str = Field(..., description="URL of the temperature map image")
+    temp_type: str = Field(
+        ..., description="Type of temperature (mean, maximum, or minimum)"
+    )
+    region: str = Field(..., description="Region of Australia")
+    period: str = Field(..., description="Time period of the temperature map")
+    source: str = Field(
+        "Australian Bureau of Meteorology",
+        description="Source of the temperature map data",
+    )

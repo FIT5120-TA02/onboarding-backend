@@ -14,7 +14,7 @@ from src.app.schemas.google_maps import (
 )
 from src.app.services.google_maps import google_maps_service
 
-router = APIRouter(tags=["google_maps"])
+router = APIRouter(tags=["google-maps"])
 logger = logging.getLogger(__name__)
 
 

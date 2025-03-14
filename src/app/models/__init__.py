@@ -7,4 +7,10 @@ from src.app.models.user import User
 from src.app.models.uv_record import UVRecord
 
 # For Alembic to detect models
-__all__ = ["User", "Location", "TemperatureRecord", "UVRecord", "SkinCancerData"]
+__all__ = [
+    "User",
+    "Location",
+    "TemperatureRecord",
+    "UVRecord",
+    "SkinCancerData",
+]
