@@ -1,6 +1,6 @@
 """CRUD operations for skin cancer data."""
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
