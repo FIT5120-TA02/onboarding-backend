@@ -27,6 +27,8 @@ class Settings(BaseSettings):
         ACCESS_TOKEN_EXPIRE_MINUTES: Token expiration time in minutes.
         DATABASE_URL: Database connection string.
         ALLOWED_HOSTS: List of allowed hosts.
+        OPENWEATHERMAP_API_KEY: API key for OpenWeatherMap service.
+        GOOGLE_MAPS_API_KEY: API key for Google Maps service.
         LOG_LEVEL: Logging level.
     """
 
@@ -46,6 +48,10 @@ class Settings(BaseSettings):
 
     # CORS settings
     ALLOWED_HOSTS: List[str] = ["*"]
+
+    # API keys
+    OPENWEATHERMAP_API_KEY: Optional[str] = None
+    GOOGLE_MAPS_API_KEY: Optional[str] = None
 
     # Set model_config to use the appropriate env file
     model_config = SettingsConfigDict(

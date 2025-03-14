@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.app.api.v1.health import router as health_router
+from src.app.api import api_router
 from src.app.core.config import settings
 from src.app.core.exceptions.handlers import add_exception_handlers
 from src.app.core.logger import setup_logging
@@ -41,6 +41,6 @@ def create_app() -> FastAPI:
     add_exception_handlers(app)
 
     # Include routers
-    app.include_router(health_router, prefix="/api/v1")
+    app.include_router(api_router, prefix="/api")
 
     return app
