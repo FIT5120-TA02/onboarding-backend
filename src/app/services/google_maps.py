@@ -85,14 +85,11 @@ class GoogleMapsService:
             logger.error(f"Error fetching address predictions: {e}")
             raise ValueError(f"Error fetching address predictions: {str(e)}")
 
-    async def get_place_details(
-        self, place_id: str, session_token: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_place_details(self, place_id: str) -> Dict[str, Any]:
         """Get place details from Google Places Details API.
 
         Args:
             place_id: The place ID to get details for.
-            session_token: Optional session token for billing optimization.
 
         Returns:
             Place details including coordinates.
@@ -108,9 +105,6 @@ class GoogleMapsService:
             "key": self.api_key,
             "fields": "formatted_address,geometry,name,address_component",
         }
-
-        if session_token:
-            params["sessiontoken"] = session_token
 
         try:
             async with httpx.AsyncClient() as client:

@@ -10,7 +10,6 @@ class AddressPredictionRequest(BaseModel):
 
     Attributes:
         input: The text to get predictions for.
-        session_token: Optional session token for billing optimization.
     """
 
     input: str = Field(
@@ -65,13 +64,9 @@ class PlaceDetailsRequest(BaseModel):
 
     Attributes:
         place_id: The place ID to get details for.
-        session_token: Optional session token for billing optimization.
     """
 
     place_id: str = Field(..., description="Place ID to get details for")
-    session_token: Optional[str] = Field(
-        None, description="Session token for billing optimization"
-    )
 
 
 class PlaceDetails(BaseModel):

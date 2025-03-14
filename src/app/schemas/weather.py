@@ -11,10 +11,12 @@ class WeatherRequest(BaseModel):
     Attributes:
         lat: Latitude of the location.
         lon: Longitude of the location.
+        name: Name of the user requesting the weather data.
     """
 
     lat: float = Field(..., description="Latitude of the location", ge=-90, le=90)
     lon: float = Field(..., description="Longitude of the location", ge=-180, le=180)
+    name: str = Field(..., description="Name of the user requesting the weather data")
 
 
 class WeatherCondition(BaseModel):

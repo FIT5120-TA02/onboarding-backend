@@ -2,8 +2,14 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
+from src.app.api.dependencies import get_db
+from src.app.crud.crud_locations import location_crud
+from src.app.crud.crud_temperature_records import temperature_record_crud
+from src.app.crud.crud_users import user_crud
+from src.app.crud.crud_uv_records import uv_record_crud
 from src.app.schemas.weather import (
     TemperatureMapResponse,
     UVIndexHeatmapResponse,
@@ -21,13 +27,16 @@ logger = logging.getLogger(__name__)
     response_model=WeatherResponse,
     status_code=status.HTTP_200_OK,
     summary="Get weather data",
-    description="Get weather data for a location by coordinates.",
+    description="Get weather data for a location by coordinates and save to database.",
 )
-async def get_weather(request: WeatherRequest) -> WeatherResponse:
-    """Get weather data for a location by coordinates.
+async def get_weather(
+    request: WeatherRequest, db: Session = Depends(get_db)
+) -> WeatherResponse:
+    """Get weather data for a location by coordinates and save to database.
 
     Args:
-        request: Weather request containing coordinates.
+        request: Weather request containing coordinates and user name.
+        db: Database session.
 
     Returns:
         Weather data for the requested location.
@@ -37,11 +46,57 @@ async def get_weather(request: WeatherRequest) -> WeatherResponse:
     """
     try:
         logger.info(
-            f"Getting weather data for coordinates: {request.lat}, {request.lon}"
+            f"Getting weather data for coordinates: {request.lat}, {request.lon} for user: {request.name}"
         )
 
         # Get weather data
         weather_data = await weather_service.get_weather_data(request.lat, request.lon)
+
+        # Save data to database
+        try:
+            # Get or create user
+            user = user_crud.get_or_create(db, name=request.name)
+            logger.info(f"User found/created: {user.id} - {user.name}")
+
+            # Create or get location
+            location_info = weather_data["location"]
+            existing_location = location_crud.get_by_coordinates(
+                db, latitude=request.lat, longitude=request.lon
+            )
+
+            if existing_location:
+                location = existing_location
+                logger.info(f"Using existing location: {location.id}")
+            else:
+                location = location_crud.create_with_user(
+                    db,
+                    obj_in={
+                        "lat": request.lat,
+                        "lon": request.lon,
+                        "city": location_info.get("city"),
+                        "country": location_info.get("country"),
+                    },
+                    user_id=user.id,
+                )
+                logger.info(f"Created new location: {location.id}")
+
+            # Create temperature record
+            temperature_record = temperature_record_crud.create_from_weather_data(
+                db, weather_data=weather_data, location_id=location.id
+            )
+            logger.info(f"Created temperature record: {temperature_record.id}")
+
+            # Create UV record
+            uv_record = uv_record_crud.create_from_weather_data(
+                db, weather_data=weather_data, location_id=location.id
+            )
+            logger.info(f"Created UV record: {uv_record.id}")
+
+        except Exception as e:
+            logger.error(f"Error saving data to database: {e}")
+            # Continue with the response even if database operations fail
+            # This ensures the API still returns weather data to the user
+
         return WeatherResponse(**weather_data)
 
     except ValueError as e:

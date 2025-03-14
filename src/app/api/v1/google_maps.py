@@ -41,9 +41,7 @@ async def get_address_predictions(
     """
     try:
         logger.info(f"Getting address predictions for input: {request.input}")
-        predictions = await google_maps_service.get_address_predictions(
-            request.input, request.session_token
-        )
+        predictions = await google_maps_service.get_address_predictions(request.input)
         return AddressPredictionResponse(predictions=predictions)
 
     except ValueError as e:
@@ -81,9 +79,7 @@ async def get_place_details(request: PlaceDetailsRequest) -> PlaceDetails:
     """
     try:
         logger.info(f"Getting place details for place_id: {request.place_id}")
-        place_details = await google_maps_service.get_place_details(
-            request.place_id, request.session_token
-        )
+        place_details = await google_maps_service.get_place_details(request.place_id)
         return PlaceDetails(**place_details)
 
     except ValueError as e:
