@@ -19,6 +19,8 @@ from src.app.schemas.weather import (
     WeatherResponse,
 )
 from src.app.services.weather import weather_service
+from fastapi.responses import Response
+import requests
 
 router = APIRouter(tags=["weather"])
 logger = logging.getLogger(__name__)
@@ -293,3 +295,33 @@ async def get_temperature_map(
             detail="Error fetching temperature map",
         )
     
+
+@router.get("/proxy-image")
+def proxy_image(url: str):
+    """
+    Proxy an image from an HTTP URL to serve it over HTTPS.
+    
+    Args:
+        url (str): The HTTP URL of the image.
+
+    Returns:
+        Response: The image content.
+    
+    Raises:
+        HTTPException: If the request fails.
+    """
+    try:
+        if not url.startswith("http://"):
+            raise HTTPException(status_code=400, detail="Only HTTP URLs are allowed")
+
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return Response(content=response.content, media_type="image/png")
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Failed to fetch image")
+
+    except Exception as e:
+        logger.error(f"Error fetching image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
