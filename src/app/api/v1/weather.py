@@ -144,6 +144,8 @@ async def get_uv_index_heatmap(
 
         # Get UV index heatmap URL
         url = weather_service.get_uv_index_heatmap_url(period)
+        if url.startswith("http://"):
+            url = url.replace("http://", "https://")
 
         # Map period to display name
         period_display = {
@@ -231,6 +233,9 @@ async def get_temperature_map(
 
         # Get temperature map URL
         url = weather_service.get_temperature_map_url(temp_type, region, period)
+        if url.startswith("http://"):
+            url = url.replace("http://", "https://")
+
 
         # Map temperature type to display name
         temp_type_display = {
