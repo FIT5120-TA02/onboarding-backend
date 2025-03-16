@@ -11,8 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 logger = logging.getLogger("app.config")
 
 # Determine env file path
-DEFAULT_ENV_FILE = "./env/.env"
-LOCAL_ENV_FILE = "./env/local.env"  # Updated to match the actual file name
+DEFAULT_ENV_FILE = ".env"
+LOCAL_ENV_FILE = "local.env"  # Updated to match the actual file name
 
 
 class Settings(BaseSettings):
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=True,
         extra="ignore",
-        env_file=LOCAL_ENV_FILE if Path(LOCAL_ENV_FILE).exists() else DEFAULT_ENV_FILE,
+        env_file=DEFAULT_ENV_FILE,
     )
 
     @field_validator("DATABASE_URL")
