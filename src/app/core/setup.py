@@ -31,7 +31,7 @@ def create_app() -> FastAPI:
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://uvchecker.net"],
+        allow_origins=["https://uvchecker.net", "https://api.uvchecker.net"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
