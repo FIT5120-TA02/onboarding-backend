@@ -12,6 +12,10 @@ from src.app.models.temperature_record import TemperatureRecord
 class TemperatureRecordCRUD(CRUDBase[TemperatureRecord, dict, dict]):
     """CRUD operations for TemperatureRecord model."""
 
+    def get_temperature_records(self, db: Session):
+        """Getting historical temperature data"""
+        return db.execute(select(TemperatureRecord).order_by(TemperatureRecord.created_at.asc())).scalars().all()
+
     def get_by_location_id(
         self, db: Session, *, location_id: str
     ) -> List[TemperatureRecord]:

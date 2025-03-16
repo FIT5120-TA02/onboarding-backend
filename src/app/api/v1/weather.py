@@ -4,6 +4,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from src.app.crud.crud_temperature_records import temperature_record_crud
+from src.app.crud.crud_uv_records import uv_record_crud
 
 from src.app.api.dependencies import get_db
 from src.app.crud.crud_locations import location_crud
@@ -177,7 +179,17 @@ async def get_uv_index_heatmap(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error fetching UV index heatmap",
         )
+    
 
+@router.get("/temperature-records")
+def read_temperature_records(db: Session = Depends(get_db)):
+    """Getting historical temperature data"""
+    return temperature_record_crud.get_temperature_records(db)
+
+@router.get("/uv-records")
+def read_uv_records(db: Session = Depends(get_db)):
+    """Get all historical UV index records"""
+    return uv_record_crud.get_uv_records(db)
 
 @router.get(
     "/temperature-map",
@@ -275,3 +287,4 @@ async def get_temperature_map(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error fetching temperature map",
         )
+    

@@ -11,6 +11,9 @@ from src.app.models.uv_record import UVRecord
 
 class UVRecordCRUD(CRUDBase[UVRecord, dict, dict]):
     """CRUD operations for UVRecord model."""
+    def get_uv_records(self, db: Session):
+        """Get all historical UV index records"""
+        return db.execute(select(UVRecord).order_by(UVRecord.created_at.asc())).scalars().all()
 
     def get_by_location_id(self, db: Session, *, location_id: str) -> List[UVRecord]:
         """Get UV records by location ID.
