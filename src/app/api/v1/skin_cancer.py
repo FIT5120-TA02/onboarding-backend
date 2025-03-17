@@ -34,7 +34,7 @@ async def get_skin_cancer_data(
     age_group: Optional[AgeGroupEnum] = None,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(
-        100, ge=1, le=1000, description="Maximum number of records to return"
+        100, ge=1, le=5000, description="Maximum number of records to return"
     ),
     db: Session = Depends(get_db),
 ) -> SkinCancerDataResponse:
