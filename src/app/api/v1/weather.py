@@ -202,7 +202,7 @@ async def get_uv_index_heatmap(
         
         # Create proxied URL
         base_url = "/api/v1/weather/proxy-image"
-        proxied_url = f"{base_url}?url={urllib.parse.quote(original_url)}"
+        proxied_url = f"{base_url}?url={original_url}"
 
         # Map period to display name
         period_display = {
@@ -293,7 +293,7 @@ async def get_temperature_map(
         
         # Create proxied URL
         base_url = "/api/v1/weather/proxy-image"
-        proxied_url = f"{base_url}?url={urllib.parse.quote(original_url)}"
+        proxied_url = f"{base_url}?url={original_url}"
 
         # Map temperature type to display name
         temp_type_display = {
