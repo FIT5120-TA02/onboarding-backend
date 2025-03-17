@@ -142,6 +142,14 @@ async def proxy_image(
     """
     try:
         logger.info(f"Proxying image from: {url}")
+        if url.startswith('/api/v1/weather/proxy-image'):
+            nested_url = url.split('url=', 1)[1]
+            url = urllib.parse.unquote(nested_url)
+            logger.info(f"Extracted nested URL: {url}")
+
+        if not url.startswith('http://') and not url.startswith('https://'):
+            url = f"http://{url}"
+            logger.info(f"Added protocol to URL: {url}")
         
         # Use httpx for async HTTP requests
         async with httpx.AsyncClient() as client:
