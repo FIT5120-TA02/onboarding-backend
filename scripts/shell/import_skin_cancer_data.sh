@@ -7,63 +7,34 @@
 # Exit on error
 set -e
 
-# Get the directory of the script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+# Default to local environment if not specified
+ENV=${1:-local}
 
-# Parse command line arguments
-ENV=${1:-local}  # Default to local if no argument provided
-
-# Validate environment argument
-if [[ "$ENV" != "local" && "$ENV" != "dev" && "$ENV" != "prod" ]]; then
-    echo "Error: Invalid environment. Must be one of: local, dev, prod"
-    echo "Usage: ./scripts/shell/import_skin_cancer_data.sh [env]"
+# Validate environment parameter
+if [ "$ENV" != "local" ] && [ "$ENV" != "dev" ]; then
+    echo "Error: Environment must be either 'local' or 'dev'"
+    echo "Usage: $0 [local|dev]"
     exit 1
 fi
 
-echo "Using $ENV environment..."
+# Activate virtual environment
+source venv/bin/activate
 
-# Export the environment variable for the Python script
-export ENV="$ENV"
+# Set environment variables based on selected environment
+export ENVIRONMENT=$ENV
+export ENV_FILE=./env/$ENV.env
 
-# Set environment variables based on the selected environment
-if [[ "$ENV" == "local" ]]; then
-    # Use local environment variables if .env file exists
-    if [ -f "$PROJECT_ROOT/.env" ]; then
-        echo "Loading environment variables from .env file..."
-        export $(grep -v '^#' "$PROJECT_ROOT/.env" | xargs)
-    else
-        echo "Warning: .env file not found. Using default environment variables."
-    fi
-elif [[ "$ENV" == "dev" ]]; then
-    # Use dev environment variables if .env.dev file exists
-    if [ -f "$PROJECT_ROOT/.env.dev" ]; then
-        echo "Loading environment variables from .env.dev file..."
-        export $(grep -v '^#' "$PROJECT_ROOT/.env.dev" | xargs)
-    else
-        echo "Warning: .env.dev file not found. Using default environment variables."
-    fi
-elif [[ "$ENV" == "prod" ]]; then
-    # Use prod environment variables if .env.prod file exists
-    if [ -f "$PROJECT_ROOT/.env.prod" ]; then
-        echo "Loading environment variables from .env.prod file..."
-        export $(grep -v '^#' "$PROJECT_ROOT/.env.prod" | xargs)
-    else
-        echo "Warning: .env.prod file not found. Using default environment variables."
-    fi
+# Load environment variables from the env file
+if [ -f "$ENV_FILE" ]; then
+    echo "Loading environment from $ENV_FILE"
+    export $(grep -v '^#' $ENV_FILE | xargs)
+else
+    echo "Error: Environment file $ENV_FILE not found"
+    exit 1
 fi
 
-# Activate virtual environment if it exists
-if [ -d "$PROJECT_ROOT/venv" ]; then
-    echo "Activating virtual environment..."
-    source "$PROJECT_ROOT/venv/bin/activate"
-elif [ -d "$PROJECT_ROOT/env" ]; then
-    echo "Activating virtual environment..."
-    source "$PROJECT_ROOT/env/bin/activate"
-fi
-
-# Change to project root directory
-cd "$PROJECT_ROOT"
+# Add the project root to PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Run the import script
 echo "Importing skin cancer data..."
