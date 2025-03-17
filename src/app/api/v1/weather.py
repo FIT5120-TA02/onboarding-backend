@@ -141,7 +141,9 @@ async def proxy_image(
         HTTPException: If there's an error fetching the image.
     """
     try:
+
         logger.info(f"Proxying image from: {url}")
+
         if url.startswith('/api/v1/weather/proxy-image'):
             nested_url = url.split('url=', 1)[1]
             url = urllib.parse.unquote(nested_url)
@@ -150,10 +152,18 @@ async def proxy_image(
         if not url.startswith('http://') and not url.startswith('https://'):
             url = f"http://{url}"
             logger.info(f"Added protocol to URL: {url}")
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124",
+            "Referer": "http://www.bom.gov.au/",
+            "Accept": "image/webp,image/apng,image/*,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache"
+        }
         
         # Use httpx for async HTTP requests
         async with httpx.AsyncClient() as client:
-            response = await client.get(url)
+            response = await client.get(url, headers=headers, follow_redirects=True)
             
             if response.status_code != 200:
                 raise HTTPException(
