@@ -1,11 +1,16 @@
 """Weather API endpoints."""
 
 import logging
+import httpx
+import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from src.app.crud.crud_temperature_records import temperature_record_crud
 from src.app.crud.crud_uv_records import uv_record_crud
+
+from fastapi import Response
+from fastapi.responses import StreamingResponse
 
 from src.app.api.dependencies import get_db
 from src.app.crud.crud_locations import location_crud
@@ -113,6 +118,56 @@ async def get_weather(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error fetching weather data",
         )
+    
+@router.get(
+    "/proxy-image",
+    summary="Proxy for image requests",
+    description="Proxy endpoint to retrieve images from HTTP sources and serve them via HTTPS",
+)
+async def proxy_image(
+    url: str = Query(..., description="URL of the image to proxy")
+) -> StreamingResponse:
+    """Proxy for image requests.
+    
+    Retrieves images from external HTTP sources and serves them via this HTTPS endpoint.
+    
+    Args:
+        url: The URL of the image to proxy.
+        
+    Returns:
+        The image content with appropriate content type.
+        
+    Raises:
+        HTTPException: If there's an error fetching the image.
+    """
+    try:
+        logger.info(f"Proxying image from: {url}")
+        
+        # Use httpx for async HTTP requests
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Failed to retrieve the image from the source"
+                )
+            
+            # Get the content type from the original response
+            content_type = response.headers.get("content-type", "image/png")
+            
+            # Return the image content
+            return StreamingResponse(
+                content=iter([response.content]),
+                media_type=content_type
+            )
+            
+    except Exception as e:
+        logger.error(f"Error proxying image: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error proxying image"
+        )
 
 
 @router.get(
@@ -142,10 +197,12 @@ async def get_uv_index_heatmap(
     try:
         logger.info(f"Getting UV index heatmap for period: {period}")
 
-        # Get UV index heatmap URL
-        url = weather_service.get_uv_index_heatmap_url(period)
-        if url.startswith("http://"):
-            url = url.replace("http://", "https://")
+        # Get original UV index heatmap URL
+        original_url = weather_service.get_uv_index_heatmap_url(period)
+        
+        # Create proxied URL
+        base_url = "/api/v1/weather/proxy-image"
+        proxied_url = f"{base_url}?url={urllib.parse.quote(original_url)}"
 
         # Map period to display name
         period_display = {
@@ -165,7 +222,7 @@ async def get_uv_index_heatmap(
         }
 
         return UVIndexHeatmapResponse(
-            url=url,
+            url=proxied_url,
             period=period_display.get(period, period.capitalize()),
         )
 
@@ -231,11 +288,12 @@ async def get_temperature_map(
             f"region: {region}, period: {period}"
         )
 
-        # Get temperature map URL
-        url = weather_service.get_temperature_map_url(temp_type, region, period)
-        if url.startswith("http://"):
-            url = url.replace("http://", "https://")
-
+        # Get original temperature map URL
+        original_url = weather_service.get_temperature_map_url(temp_type, region, period)
+        
+        # Create proxied URL
+        base_url = "/api/v1/weather/proxy-image"
+        proxied_url = f"{base_url}?url={urllib.parse.quote(original_url)}"
 
         # Map temperature type to display name
         temp_type_display = {
@@ -274,7 +332,7 @@ async def get_temperature_map(
         }
 
         return TemperatureMapResponse(
-            url=url,
+            url=proxied_url,
             temp_type=temp_type_display.get(temp_type, temp_type.capitalize()),
             region=region_display.get(region, region.upper()),
             period=period_display.get(period, period.capitalize()),
